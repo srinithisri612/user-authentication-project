@@ -1,0 +1,32 @@
+{
+  "name": "user-authentication-project",
+  "version": "1.0.0",
+  "description": "Secure User Authentication & JWT-Based Authorization System",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node tests/auth.test.js"
+  },
+  "keywords": [
+    "authentication",
+    "jwt",
+    "cookies",
+    "bcrypt",
+    "express",
+    "security"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.3",
+    "jsonwebtoken": "^9.0.3",
+    "sqlite3": "^6.0.1"
+  }
+}

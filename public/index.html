@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure User Authentication | JWT & HTTP-Only Cookie</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="brand">
+        <div class="brand-icon">🛡️</div>
+        <div class="brand-text">
+          <span class="brand-title">SecureAuth</span>
+          <span class="brand-tag">JWT & HTTP-Only</span>
+        </div>
+      </div>
+      <nav class="nav-links" id="navLinks">
+        <!-- Dynamically rendered according to auth state -->
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-content">
+    <!-- Initial Loading State -->
+    <div id="initialLoader" class="loader-container">
+      <div class="spinner"></div>
+      <p>Verifying secure session...</p>
+    </div>
+
+    <!-- Alert / Toast Messages -->
+    <div id="alertContainer" class="alert-container hidden">
+      <div id="alertBox" class="alert-box">
+        <span id="alertIcon" class="alert-icon">ℹ️</span>
+        <div id="alertText" class="alert-text"></div>
+        <button id="alertClose" class="alert-close" aria-label="Close alert">&times;</button>
+      </div>
+    </div>
+
+    <!-- Auth Forms Container (Login / Register) -->
+    <section id="authSection" class="auth-section hidden">
+      <div class="auth-card">
+        <!-- Switcher Tabs -->
+        <div class="auth-tabs">
+          <button id="tabLogin" class="tab-btn active" type="button">Sign In</button>
+          <button id="tabRegister" class="tab-btn" type="button">Create Account</button>
+        </div>
+
+        <!-- ================= LOGIN FORM ================= -->
+        <form id="loginForm" class="auth-form" novalidate>
+          <h2 class="form-title">Welcome Back</h2>
+          <p class="form-subtitle">Log in securely with your credentials</p>
+
+          <div class="form-group">
+            <label for="loginEmail">Email Address</label>
+            <input
+              type="email"
+              id="loginEmail"
+              name="email"
+              placeholder="e.g. john@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="loginPassword">Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="loginPassword"
+                name="password"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+              />
+              <button type="button" class="toggle-password" data-target="loginPassword" aria-label="Toggle password visibility">👁️</button>
+            </div>
+          </div>
+
+          <button type="submit" id="loginBtn" class="btn btn-primary btn-block">
+            <span class="btn-text">Sign In</span>
+            <span class="btn-loader hidden"></span>
+          </button>
+
+          <div class="form-footer">
+            <span>Don't have an account?</span>
+            <button type="button" class="link-btn" id="switchToRegister">Register here</button>
+          </div>
+        </form>
+
+        <!-- ================= REGISTER FORM ================= -->
+        <form id="registerForm" class="auth-form hidden" novalidate>
+          <h2 class="form-title">Create an Account</h2>
+          <p class="form-subtitle">Sign up with high-grade bcrypt hashing</p>
+
+          <div class="form-group">
+            <label for="regName">Full Name</label>
+            <input
+              type="text"
+              id="regName"
+              name="name"
+              placeholder="e.g. John Doe"
+              required
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="regEmail">Email Address</label>
+            <input
+              type="email"
+              id="regEmail"
+              name="email"
+              placeholder="e.g. john@example.com"
+              required
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="regPassword">Password</label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="regPassword"
+                name="password"
+                placeholder="At least 8 chars, 1 uppercase, 1 symbol..."
+                required
+                autocomplete="new-password"
+              />
+              <button type="button" class="toggle-password" data-target="regPassword" aria-label="Toggle password visibility">👁️</button>
+            </div>
+
+            <!-- Password Strength Indicator -->
+            <div class="strength-meter">
+              <div class="strength-bar-bg">
+                <div id="strengthBar" class="strength-bar-fill"></div>
+              </div>
+              <span id="strengthText" class="strength-text">Password requirements:</span>
+            </div>
+
+            <!-- Live Checklist -->
+            <ul class="password-checklist" id="passwordChecklist">
+              <li id="ruleLength" class="invalid">Minimum 8 characters</li>
+              <li id="ruleUpper" class="invalid">At least 1 uppercase letter (A-Z)</li>
+              <li id="ruleLower" class="invalid">At least 1 lowercase letter (a-z)</li>
+              <li id="ruleNumber" class="invalid">At least 1 number (0-9)</li>
+              <li id="ruleSpecial" class="invalid">At least 1 special character (!@#$%^&*)</li>
+            </ul>
+          </div>
+
+          <button type="submit" id="registerBtn" class="btn btn-primary btn-block">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-loader hidden"></span>
+          </button>
+
+          <div class="form-footer">
+            <span>Already registered?</span>
+            <button type="button" class="link-btn" id="switchToLogin">Sign in here</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- ================= PROTECTED DASHBOARD SECTION ================= -->
+    <section id="dashboardSection" class="dashboard-section hidden">
+      <div class="dashboard-header">
+        <div class="user-greeting">
+          <h1>Welcome, <span id="dashUserName">User</span>! 👋</h1>
+          <p class="subtitle">You have authenticated via secure, HTTP-only JWT cookies.</p>
+        </div>
+        <button id="dashLogoutBtn" class="btn btn-secondary">
+          <span>Sign Out</span>
+        </button>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- User Profile Card -->
+        <div class="card profile-card">
+          <div class="card-header">
+            <h3>👤 Authenticated Profile</h3>
+            <span class="badge badge-success">Active Session</span>
+          </div>
+          <div class="card-body">
+            <div class="profile-info-row">
+              <span class="info-label">User ID:</span>
+              <span class="info-value code" id="dashUserId">-</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Full Name:</span>
+              <span class="info-value" id="dashProfileName">-</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Email:</span>
+              <span class="info-value" id="dashProfileEmail">-</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Member Since:</span>
+              <span class="info-value" id="dashMemberSince">-</span>
+            </div>
+            <div class="profile-info-row">
+              <span class="info-label">Auth Storage:</span>
+              <span class="info-value secure-pill">🔒 HTTP-Only Cookie</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Security Verification Card -->
+        <div class="card security-card">
+          <div class="card-header">
+            <h3>🛡️ Security Protections Active</h3>
+            <span class="badge badge-info">Verified</span>
+          </div>
+          <div class="card-body">
+            <ul class="security-list">
+              <li>✅ <strong>Bcrypt Password Hashing:</strong> 12 salt rounds (plain-text never stored)</li>
+              <li>✅ <strong>HTTP-Only Cookie:</strong> Token inaccessible to JavaScript / XSS</li>
+              <li>✅ <strong>SameSite & HTTPS Cookies:</strong> CSRF protection enforced</li>
+              <li>✅ <strong>Brute-Force Rate Limiter:</strong> Failed login threshold enforced</li>
+              <li>✅ <strong>Zero LocalStorage Leakage:</strong> Tokens never stored in Web Storage</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Protected Route API Tester Card -->
+        <div class="card api-card full-width">
+          <div class="card-header">
+            <h3>🧪 Protected Route Demonstration</h3>
+            <span class="badge badge-primary">JWT Middleware</span>
+          </div>
+          <div class="card-body">
+            <p>Test calling protected server endpoints using your active HTTP-only session cookie:</p>
+            <div class="btn-group">
+              <button id="btnFetchMe" class="btn btn-outline">
+                <span>GET /api/auth/me</span>
+              </button>
+              <button id="btnFetchDashboardStats" class="btn btn-outline">
+                <span>GET /api/auth/dashboard-stats</span>
+              </button>
+            </div>
+
+            <div class="api-response-wrapper">
+              <div class="response-header">
+                <span>Server JSON Response:</span>
+                <span id="responseStatusBadge" class="status-badge">-</span>
+              </div>
+              <pre id="apiResponseBox" class="response-box">// Click a protected endpoint above to test authorization</pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>Secure User Authentication & JWT-Based Authorization &bull; Built with Node.js, Express & SQLite</p>
+  </footer>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>
